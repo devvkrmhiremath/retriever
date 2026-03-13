@@ -1,4 +1,3 @@
-import numpy as np
 from typing import List
 from core.models import PipelineContext, SearchResult
 
@@ -17,23 +16,24 @@ def apply_rrf(context: PipelineContext, k: int = 60) -> PipelineContext:
             rankings[res.source_index] = []
         rankings[res.source_index].append(res)
     
-    # 2. Sort each source by initial BM25/Vector score to determine rank
+    # 2. Sort each source by Semantic Reranker score first (if present), then Vector/BM25 score
     for src in rankings:
-        rankings[src].sort(key=lambda x: x.score, reverse=True)
+        rankings[src].sort(key=lambda x: (x.rerank_score or 0.0, x.score or 0.0), reverse=True)
         
     # 3. Apply RRF Formula: Score = Sum( 1 / (rank + k) )
     fusion_scores = {} # id -> total_rrf_score
-    id_to_obj = {}
     
     for src, docs in rankings.items():
         for rank, doc in enumerate(docs, 1):
             if doc.id not in fusion_scores:
                 fusion_scores[doc.id] = 0
-                id_to_obj[doc.id] = doc
             fusion_scores[doc.id] += 1.0 / (rank + k)
     
-    # 4. Update the global context with fused scores
-    context.all_results.sort(key=lambda x: fusion_scores.get(x.id, 0), reverse=True)
+    # 4. Update the global context with fused scores to be used by MMR
+    for doc in context.all_results:
+        doc.score = fusion_scores.get(doc.id, 0)
+        
+    context.all_results.sort(key=lambda x: x.score, reverse=True)
     return context
 
 def remove_duplicates(context: PipelineContext) -> PipelineContext:

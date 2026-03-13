@@ -1,47 +1,45 @@
-import json
-import os
-import httpx
 import logging
 from core.models import PipelineContext, SearchResult, MCPServerConfig
 from typing import List
+from mcp import ClientSession
+from mcp.client.sse import sse_client
 
 async def call_mcp_server(server_config: MCPServerConfig, query: str) -> List[SearchResult]:
     """
-    Calls an MCP server's search/retrieve tool. 
-    This is a generic implementation using the MCP HTTP protocol patterns.
+    Calls an MCP server's search/retrieve tool using the official SSE client.
+    This supports modern streamable HTTP MCP servers.
     """
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            # Note: For real MCP servers, we'd use the mcp-python-sdk to interact 
-            # with specific resources/tools. Here we simulate the pattern.
-            payload = {
-                "method": "tools/call",
-                "params": {
-                    "name": "search",
-                    "arguments": {"query": query}
-                }
-            }
-            
-            # Placeholder URL - would be the specialized MCP bridge or direct SSE endpoint
-            response = await client.post(server_config.url, json=payload)
-            response.raise_for_status()
-            
-            data = response.json()
-            results = data.get("result", {}).get("content", [])
-            
-            mapped = []
-            for i, item in enumerate(results):
-                mapped.append(SearchResult(
-                    id=f"mcp-{server_config.name}-{i}",
-                    content=item.get("text", str(item)),
-                    score=1.0, # MCP servers often don't have normalized relevance scores
-                    source_index=server_config.name,
-                    source_type="MCP"
-                ))
-            return mapped
-            
+        # Connect strictly via Server-Sent Events (SSE) which is standard for HTTP MCP
+        async with sse_client(server_config.url) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                # Initialize the session
+                await session.initialize()
+                
+                # Execute the 'search' tool with the user's query
+                # Assumes the standard MCP tools/call convention
+                result = await session.call_tool("search", {"query": query})
+                
+                mapped = []
+                # MCP 'call_tool' typically returns a CallToolResult whose 'content' 
+                # is a list of TextContent or ImageContent objects.
+                if result and hasattr(result, "content"):
+                    for i, item in enumerate(result.content):
+                        # item is usually text content defined by the MCP spec
+                        # if item has a .text property, grab it
+                        content_text = getattr(item, 'text', str(item))
+                        
+                        mapped.append(SearchResult(
+                            id=f"mcp-{server_config.name}-{i}",
+                            content=content_text,
+                            score=1.0, # Semantic Reranker and RRF normalize these downstream
+                            source_index=server_config.name,
+                            source_type="MCP"
+                        ))
+                return mapped
+                
     except Exception as e:
-        logging.error(f"MCP Server {server_config.name} call failed: {e}")
+        logging.error(f"MCP Server {server_config.name} SSE call failed: {e}")
         return []
 
 async def retrieve_from_all_mcp(context: PipelineContext) -> PipelineContext:

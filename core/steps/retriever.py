@@ -15,7 +15,7 @@ async def search_index(index_config: SearchIndexConfig, context: PipelineContext
         vector=context.embedding,
         k_nearest_neighbors=context.retrieval_k,
         fields=index_config.vector_field,
-        exhaustive=True # Set to True for absolute precision in enterprise RAG
+        exhaustive=False # Set to False for HNSW; massive latency improvement for large indexes
     )
     
     # 2. Execute Hybrid Search with Semantic Reranking

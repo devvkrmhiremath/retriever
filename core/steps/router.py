@@ -69,28 +69,16 @@ Return JSON format:
     return context
 
 async def determine_retrieval_depth(context: PipelineContext) -> PipelineContext:
-    """Determines retrieval depth (k) based on query and index count."""
+    """Determines retrieval depth (k) based on query and keyword count heuristically to avoid LLM latency."""
     
-    prompt = """Determine per-index retrieval depth (k).
-Simple question → 10
-Broad research → 30
-Deep technical inquiry → 50
-Return ONLY the number."""
-
-    client = clients.openai_client
-    deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o")
+    # Use the number of keywords extracted during the rewrite phase as a proxy for complexity.
+    num_keywords = len(context.rewritten.keywords) if context.rewritten else 0
     
-    response = await client.chat.completions.create(
-        model=deployment,
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": f"Query: {context.query}"}
-        ]
-    )
-    
-    try:
-        context.retrieval_k = int(response.choices[0].message.content.strip())
-    except ValueError:
-        context.retrieval_k = 20
+    if num_keywords <= 3:
+        context.retrieval_k = 10 # Simple question
+    elif num_keywords <= 6:
+        context.retrieval_k = 30 # Broad research
+    else:
+        context.retrieval_k = 50 # Deep technical inquiry
         
     return context
