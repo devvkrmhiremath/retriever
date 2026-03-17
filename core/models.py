@@ -5,6 +5,8 @@ class SearchIndexConfig(BaseModel):
     name: str
     content_field: str
     vector_field: str
+    select_fields: Optional[List[str]] = None
+    semantic_config: str = "default"
     description: str = "Enterprise data index"
     category: str = "General"
 

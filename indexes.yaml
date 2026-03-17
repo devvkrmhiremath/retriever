@@ -1,0 +1,180 @@
+indexes:
+  # Placeholder 1
+  - name: "hr-docs-index"
+    content_field: "content"
+    vector_field: "contentVector"
+    select_fields: ["id", "content", "title", "source_url"]
+    semantic_config: "default"
+    description: "Human Resources policies and guidelines"
+    category: "HR"
+  
+  # Placeholder 2
+  - name: "it-support-index"
+    content_field: "chunk"
+    vector_field: "vector"
+    select_fields: ["id", "chunk", "article_id", "resolution"]
+    semantic_config: "default-semantic"
+    description: "IT support tickets and knowledge base"
+    category: "IT"
+
+  # Placeholder 3
+  - name: "sales-enablement-index"
+    content_field: "text"
+    vector_field: "text_vector"
+    select_fields: ["id", "text", "product_name", "region"]
+    semantic_config: "my-semantic-config"
+    description: "Sales pitch decks and product info"
+    category: "Sales"
+
+  # Placeholder 4
+  - name: "engineering-docs-index"
+    content_field: "content"
+    vector_field: "content_vector"
+    select_fields: ["id", "content", "repo", "author"]
+    semantic_config: "default"
+    description: "Engineering design docs and architecture"
+    category: "Engineering"
+
+  # Placeholder 5
+  - name: "legal-contracts-index"
+    content_field: "clause"
+    vector_field: "clause_vector"
+    select_fields: ["id", "clause", "contract_type", "party"]
+    semantic_config: "legal-semantic-profile"
+    description: "Legal contracts and vendor agreements"
+    category: "Legal"
+
+  # Placeholder 6
+  - name: "marketing-assets-index"
+    content_field: "description"
+    vector_field: "desc_vector"
+    select_fields: ["id", "description", "campaign", "asset_url"]
+    semantic_config: "default"
+    description: "Marketing campaign descriptions and assets"
+    category: "Marketing"
+
+  # Placeholder 7
+  - name: "customer-feedback-index"
+    content_field: "feedback_text"
+    vector_field: "feedback_vector"
+    select_fields: ["id", "feedback_text", "sentiment", "product"]
+    semantic_config: "default"
+    description: "Customer feedback and reviews"
+    category: "Support"
+
+  # Placeholder 8
+  - name: "finance-reports-index"
+    content_field: "summary"
+    vector_field: "summary_vector"
+    select_fields: ["id", "summary", "quarter", "year"]
+    semantic_config: "finance-semantic"
+    description: "Quarterly and annual financial reports"
+    category: "Finance"
+
+  # Placeholder 9
+  - name: "compliance-training-index"
+    content_field: "module_content"
+    vector_field: "module_vector"
+    select_fields: ["id", "module_content", "module_name", "required_role"]
+    semantic_config: "default"
+    description: "Compliance and regulatory training materials"
+    category: "Compliance"
+
+  # Placeholder 10
+  - name: "product-manuals-index"
+    content_field: "instructions"
+    vector_field: "instruction_vector"
+    select_fields: ["id", "instructions", "model_number", "version"]
+    semantic_config: "default"
+    description: "User manuals for products"
+    category: "Product"
+
+  # Placeholder 11
+  - name: "api-documentation-index"
+    content_field: "endpoint_desc"
+    vector_field: "endpoint_vector"
+    select_fields: ["id", "endpoint_desc", "method", "path"]
+    semantic_config: "api-semantic"
+    description: "Internal APIs and service documentation"
+    category: "Engineering"
+
+  # Placeholder 12
+  - name: "vendor-assessments-index"
+    content_field: "assessment_notes"
+    vector_field: "notes_vector"
+    select_fields: ["id", "assessment_notes", "vendor_name", "score"]
+    semantic_config: "default"
+    description: "Security and compliance assessments of vendors"
+    category: "Security"
+
+  # Placeholder 13
+  - name: "office-locations-index"
+    content_field: "details"
+    vector_field: "details_vector"
+    select_fields: ["id", "details", "city", "country"]
+    semantic_config: "default"
+    description: "Information about global office locations"
+    category: "Operations"
+
+  # Placeholder 14
+  - name: "employee-benefits-index"
+    content_field: "policy_text"
+    vector_field: "policy_vector"
+    select_fields: ["id", "policy_text", "benefit_type", "provider"]
+    semantic_config: "default"
+    description: "Employee health, wellness, and benefits details"
+    category: "HR"
+
+  # Placeholder 15
+  - name: "project-postmortems-index"
+    content_field: "learnings"
+    vector_field: "learnings_vector"
+    select_fields: ["id", "learnings", "project_name", "date"]
+    semantic_config: "default"
+    description: "Lessons learned from completed projects"
+    category: "Management"
+
+  # Placeholder 16
+  - name: "competitive-intel-index"
+    content_field: "analysis"
+    vector_field: "analysis_vector"
+    select_fields: ["id", "analysis", "competitor", "market"]
+    semantic_config: "intel-semantic"
+    description: "Analysis of market competitors"
+    category: "Strategy"
+
+  # Placeholder 17
+  - name: "training-videos-transcripts-index"
+    content_field: "transcript"
+    vector_field: "transcript_vector"
+    select_fields: ["id", "transcript", "video_title", "timestamp"]
+    semantic_config: "default"
+    description: "Transcripts of internal training videos"
+    category: "Training"
+
+  # Placeholder 18
+  - name: "company-news-index"
+    content_field: "article_body"
+    vector_field: "article_vector"
+    select_fields: ["id", "article_body", "publish_date", "author"]
+    semantic_config: "news-semantic"
+    description: "Internal blog posts and news announcements"
+    category: "Communications"
+
+  # Placeholder 19
+  - name: "brand-guidelines-index"
+    content_field: "guideline"
+    vector_field: "guideline_vector"
+    select_fields: ["id", "guideline", "element", "hex_codes"]
+    semantic_config: "default"
+    description: "Rules for logo usage, colors, and typography"
+    category: "Design"
+
+  # Placeholder 20
+  - name: "research-papers-index"
+    content_field: "abstract"
+    vector_field: "abstract_vector"
+    select_fields: ["id", "abstract", "paper_title", "authors"]
+    semantic_config: "research-semantic"
+    description: "Published research papers and findings"
+    category: "Research"

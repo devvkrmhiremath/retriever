@@ -23,9 +23,9 @@ async def search_index(index_config: SearchIndexConfig, context: PipelineContext
         search_text=context.rewritten.search_query,
         vector_queries=[vector_query],
         query_type="semantic",
-        semantic_configuration_name="default", # Standard MS recommendation
+        semantic_configuration_name=index_config.semantic_config,
         top=context.retrieval_k,
-        select=["id", index_config.content_field],
+        select=index_config.select_fields if index_config.select_fields else ["id", index_config.content_field],
         include_total_count=True
     )
     
