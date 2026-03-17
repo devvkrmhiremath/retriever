@@ -45,7 +45,6 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- Helper to handle async orchestrator in a sync app ---
 def get_or_create_eventloop():
     try:
         return asyncio.get_event_loop()
@@ -54,6 +53,19 @@ def get_or_create_eventloop():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             return asyncio.get_event_loop()
+
+def sync_iter_async(async_gen):
+    """Bridge to iterate an async generator in a synchronous context."""
+    loop = get_or_create_eventloop()
+    try:
+        while True:
+            try:
+                yield loop.run_until_complete(async_gen.__anext__())
+            except StopAsyncIteration:
+                break
+    except Exception as e:
+        import logging
+        logging.error(f"Streaming error: {e}")
 
 # --- Chat Interface Execution ---
 if prompt := st.chat_input("What would you like to know?"):
@@ -73,18 +85,24 @@ if prompt := st.chat_input("What would you like to know?"):
             
             # Execute Pipeline
             orchestrator = RAGOrchestrator()
-            loop = get_or_create_eventloop()
             
             try:
                 # Retrieve the full conversation context (memory) to include in the query
                 history = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.messages[-4:]])
                 contextual_prompt = f"Previous Context:\n{history}\n\nCurrent Question: {prompt}"
                 
-                # Mock response for testing UI without full Azure credentials / OpenAI installation
-                import time
-                time.sleep(1.5) # Simulate processing time
-                mock_sources = "\n\n**Sources:**\n- [HR Policy V1](#) (hr-docs-index)\n- [IT Resolution 4022](#) (it-support-index)"
-                answer = f"This is a simulated response from the Elite Azure RAG Pipeline for your query: '{prompt}'.\n\nThe routing logic successfully checked {len(INDEXES)} Azure Search indexes and integrated results. {mock_sources}"
+                # [Improvement 3] Implementing real-time streaming in UI
+                # We use the sync-bridge to feed st.write_stream
+                answer = message_placeholder.write_stream(
+                    sync_iter_async(
+                        orchestrator.run_stream(
+                            query=contextual_prompt,
+                            indexes=INDEXES,
+                            mcp_servers=MCP_SERVERS,
+                            max_context_chunks=15
+                        )
+                    )
+                )
                 
             except Exception as e:
                 import traceback

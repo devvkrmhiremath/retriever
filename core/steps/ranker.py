@@ -1,5 +1,8 @@
+import json
+import os
 from typing import List
 from core.models import PipelineContext, SearchResult
+from utils.azure_clients import clients
 
 def apply_rrf(context: PipelineContext, k: int = 60) -> PipelineContext:
     """
@@ -92,4 +95,57 @@ def maximal_marginal_relevance(context: PipelineContext, lambda_param: float = 0
             break
 
     context.final_context = selected
+    return context
+
+async def neural_rerank(context: PipelineContext, top_n: int = 15) -> PipelineContext:
+    """
+    Acts as a Cross-Encoder Reranker using an LLM.
+    Scrutinizes the top candidates from RRF/MMR to ensure absolute alignment with query intent.
+    """
+    if not context.all_results:
+        return context
+        
+    # We only rerank the top K results to manage latency/cost
+    candidates = context.all_results[:25]
+    
+    system_prompt = """You are a Neural Reranking Agent.
+Your task is to re-score search results based on their direct relevance to the user's query.
+
+For each result, provide a score between 0.0 (Irrelevant) and 1.0 (Highly Relevant).
+Return ONLY a JSON array of scores in the same order as the candidates.
+Format: [0.95, 0.4, 0.8, ...]"""
+
+    candidate_texts = [f"Content: {c.content[:500]}" for c in candidates]
+    user_prompt = f"Query: {context.query}\n\nCandidates:\n" + "\n---\n".join(candidate_texts)
+
+    client = clients.openai_client
+    deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o")
+
+    try:
+        response = await client.chat.completions.create(
+            model=deployment,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.0
+        )
+        
+        # Parse scores
+        scores = json.loads(response.choices[0].message.content)
+        
+        # Apply new scores to candidates
+        for i, score in enumerate(scores):
+            if i < len(candidates):
+                candidates[i].rerank_score = float(score)
+        
+        # Re-sort based on both RRF and Neutral Rerank
+        # We weight Neural Rerank highly
+        context.all_results.sort(key=lambda x: (x.rerank_score or 0.0) * 0.7 + (x.score or 0.0) * 0.3, reverse=True)
+        
+    except Exception as e:
+        import logging
+        logging.error(f"Neural Reranking failed: {e}")
+        # Fallback: maintain existing order
+        
     return context
