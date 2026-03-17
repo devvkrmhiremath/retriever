@@ -16,6 +16,8 @@ class AzureClientFactory:
             cls._instance._openai_client = None
             cls._instance._search_index_client = None
             cls._instance._search_clients = {}
+            # Share the credential object to reduce memory overhead
+            cls._instance._search_credential = AzureKeyCredential(os.getenv("AZURE_SEARCH_API_KEY"))
         return cls._instance
 
     @property
@@ -38,11 +40,15 @@ class AzureClientFactory:
         return self._search_index_client
 
     def get_search_client(self, index_name: str) -> SearchClient:
+        """
+        Returns a SearchClient for a specific index. 
+        Note: The client itself manages an internal connection pool.
+        """
         if index_name not in self._search_clients:
             self._search_clients[index_name] = SearchClient(
                 endpoint=os.getenv("AZURE_SEARCH_ENDPOINT"),
                 index_name=index_name,
-                credential=AzureKeyCredential(os.getenv("AZURE_SEARCH_API_KEY"))
+                credential=self._search_credential
             )
         return self._search_clients[index_name]
 

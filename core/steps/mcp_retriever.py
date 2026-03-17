@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from core.models import PipelineContext, SearchResult, MCPServerConfig
 from typing import List
 try:
@@ -20,14 +21,15 @@ async def call_mcp_server(server_config: MCPServerConfig, query: str) -> List[Se
         return []
     try:
         # Connect strictly via Server-Sent Events (SSE) which is standard for HTTP MCP
-        async with sse_client(server_config.url) as (read_stream, write_stream):
-            async with ClientSession(read_stream, write_stream) as session:
-                # Initialize the session
-                await session.initialize()
-                
-                # Execute the 'search' tool with the user's query
-                # Assumes the standard MCP tools/call convention
-                result = await session.call_tool("search", {"query": query})
+        async with asyncio.timeout(5.0): # Global MCP Timeout
+            async with sse_client(server_config.url) as (read_stream, write_stream):
+                async with ClientSession(read_stream, write_stream) as session:
+                    # Initialize the session
+                    await session.initialize()
+                    
+                    # Execute the 'search' tool with the user's query
+                    # Assumes the standard MCP tools/call convention
+                    result = await session.call_tool("search", {"query": query})
                 
                 mapped = []
                 # MCP 'call_tool' typically returns a CallToolResult whose 'content' 
