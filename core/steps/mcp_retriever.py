@@ -1,14 +1,23 @@
 import logging
 from core.models import PipelineContext, SearchResult, MCPServerConfig
 from typing import List
-from mcp import ClientSession
-from mcp.client.sse import sse_client
+try:
+    from mcp import ClientSession
+    from mcp.client.sse import sse_client
+    HAS_MCP = True
+except ImportError:
+    HAS_MCP = False
+    ClientSession = None
+    sse_client = None
 
 async def call_mcp_server(server_config: MCPServerConfig, query: str) -> List[SearchResult]:
     """
     Calls an MCP server's search/retrieve tool using the official SSE client.
     This supports modern streamable HTTP MCP servers.
     """
+    if not HAS_MCP:
+        logging.warning(f"Skipping MCP call for {server_config.name}: 'mcp' library not installed.")
+        return []
     try:
         # Connect strictly via Server-Sent Events (SSE) which is standard for HTTP MCP
         async with sse_client(server_config.url) as (read_stream, write_stream):

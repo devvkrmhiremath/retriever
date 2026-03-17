@@ -1,5 +1,5 @@
 import os
-from azure.openai import AsyncAzureOpenAI
+from openai import AsyncAzureOpenAI
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents.aio import SearchClient
 from azure.search.documents.indexes.aio import SearchIndexClient

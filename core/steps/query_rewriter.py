@@ -1,6 +1,6 @@
 import json
 import os
-from azure.openai import AsyncAzureOpenAI
+from openai import AsyncAzureOpenAI
 from core.models import PipelineContext, RewrittenQuery
 from utils.azure_clients import clients
 
