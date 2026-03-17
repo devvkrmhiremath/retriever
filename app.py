@@ -67,6 +67,7 @@ def sync_iter_async(async_gen):
         import logging
         logging.error(f"Streaming error: {e}")
 
+
 # --- Chat Interface Execution ---
 if prompt := st.chat_input("What would you like to know?"):
     # 1. Add User Input to State
